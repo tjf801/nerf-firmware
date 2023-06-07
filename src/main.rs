@@ -11,8 +11,7 @@ use avr_device::interrupt;
 use avr_hal_generic::port::{Pin, mode};
 use core::cell::RefCell;
 
-mod panic;
-mod print;
+mod utils;
 
 
 type RevButtonPinType = Pin<mode::Input<mode::Floating>, arduino_hal::hal::port::PD2>;
@@ -55,7 +54,8 @@ fn set_rev_motors(rev_pin: &mut RevButtonPinType, motor_pin: &mut RevMotorPinTyp
 fn setup(dp: arduino_hal::Peripherals) -> Pin<mode::Output, arduino_hal::hal::port::PB5> {
     let pins = arduino_hal::pins!(dp);
     
-    print::put_console(arduino_hal::default_serial!(dp, pins, 57600));
+    utils::print::put_console(arduino_hal::default_serial!(dp, pins, 57600));
+    
     println!("Setting up firmware...");
     
     let pwm_timer = Timer0Pwm::new(dp.TC0, Prescaler::Prescale64);

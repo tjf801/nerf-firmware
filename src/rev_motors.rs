@@ -3,6 +3,9 @@ use avr_device::interrupt;
 use avr_hal_generic::port::{Pin, mode};
 use core::cell::RefCell;
 
+
+const REV_POWER: u8 = 127; // 50% duty cycle
+
 type RevButtonPinType = Pin<mode::Input<mode::Floating>, arduino_hal::hal::port::PD2>;
 static REV_BUTTON_PIN: interrupt::Mutex<RefCell<Option<RevButtonPinType>>> = interrupt::Mutex::new(RefCell::new(None));
 
@@ -29,8 +32,6 @@ fn INT0() {
 
 #[inline(always)]
 fn set_rev_motors(rev_pin: &mut RevButtonPinType, motor_pin: &mut RevMotorPinType) {
-    const REV_POWER: u8 = 127;
-    
     if rev_pin.is_high() {
         motor_pin.enable();
         motor_pin.set_duty(REV_POWER);
@@ -44,7 +45,7 @@ pub fn setup(
     d2: Pin<mode::Input<mode::Floating>, arduino_hal::hal::port::PD2>,
     d5: Pin<mode::Input<mode::Floating>, arduino_hal::hal::port::PD5>,
     pwm_timer: &Timer0Pwm,
-    EXINT: &arduino_hal::pac::EXINT,
+    exint: &arduino_hal::pac::EXINT,
 ) {
     // SAFETY: interrupts are disabled so this is safe
     REV_BUTTON_PIN
@@ -62,7 +63,7 @@ pub fn setup(
     );
     
     // Configure INT0 to trigger when the pin changes
-    EXINT.eicra.modify(|_, w| w.isc0().bits(0b01));
+    exint.eicra.modify(|_, w| w.isc0().bits(0b01));
     // Enable INT0
-    EXINT.eimsk.modify(|_, w| w.int0().set_bit());
+    exint.eimsk.modify(|_, w| w.int0().set_bit());
 }

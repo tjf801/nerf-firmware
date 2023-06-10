@@ -1,4 +1,4 @@
-use core::{panic::PanicInfo, fmt::Debug};
+use core::panic::PanicInfo;
 
 use arduino_hal::prelude::*;
 
@@ -63,7 +63,7 @@ fn panic_debug(info: &PanicInfo) -> ! {
     let pins = arduino_hal::pins!(dp);
     
     // Print out panic location
-    let mut serial = arduino_hal::default_serial!(dp, pins, 57600);
+    let serial = arduino_hal::default_serial!(dp, pins, 57600);
     print_panic_info(serial, &info);
     
     // Blink LED rapidly

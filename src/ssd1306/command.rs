@@ -36,6 +36,7 @@ pub enum Command {
     /// `true`: Display ON in normal mode.
     DisplayEnable(bool), // false=0xAE, true=0xAF
     
+    
     // Scrolling commands
     // ==================
     
@@ -129,40 +130,104 @@ pub enum Command {
     // Addressing Setting Commands
     // ===========================
     
-    LowerColumnStart(u8),
-    UpperColumnStart(u8),
-    /// Set the starting column. This is only for horizontal/vertical addressing mode.
-    ColumnStart(u8),
-    /// Set the starting page. This is only for page addressing mode.
-    PageStart(Page),
+    /// ### Set Lower Column Start Address for Page Addressing Mode.
+    /// 
+    /// Set the lower nibble of the column start address register for
+    /// Page Addressing Mode using `.0[3:0]` as data bits. The initial
+    /// display line register is reset to 0000b after RESET.
+    /// 
+    /// **NOTE:** This command is only for page addressing mode.
+    LowerColumnStart(u8), // 0x00-0x0F
     
-    SetAddressMode(AddressMode),
-    // /// Set column start and end address. This is only for horizontal/vertical addressing mode.
-    // SetColumnAddress{start_col: u8, end_col: u8},
-    // /// Set page start and end address. This is only for horizontal/vertical addressing mode.
-    // SetPageAddress{start_page: Page, end_page: Page},
-    // SetupVerticalScroll(...), // 0x28 | 0x29
+    /// ### Set Higher Column Start Address for Page Addressing Mode.
+    /// 
+    /// Set the higher nibble of the column start address register for
+    /// Page Addressing Mode using `.0[3:0]` as data bits. The initial
+    /// display line register is reset to 0000b after RESET.
+    /// 
+    /// **NOTE:** This command is only for page addressing mode.
+    UpperColumnStart(u8), // 0x10-0x1F
     
-    EnableScroll(bool),
+    /// ### Set Column Start Address for Page Addressing Mode.
+    /// 
+    /// Convenience command to set the entire column start address register
+    /// for Page Addressing Mode in a single command.
+    /// 
+    /// **NOTE:** This command is only for page addressing mode.
+    ColumnStart(u8), // LowerColumnStart + UpperColumnStart
     
-    // StartLine(u8), 0x40-0x7F
+    /// ### Set Memory Addressing Mode.
+    /// 
+    /// `AddressMode::Horizontal`:
+    /// 
+    /// `AddressMode::Vertical`:
+    /// 
+    /// `AddressMode::Page`: (RESET)
+    SetAddressMode(AddressMode), // 0x20
     
-    ChargePump(bool), // 0x8D
+    /// ### Set Column Address.
+    /// 
+    /// Setup column start and end address
+    /// 
+    /// `start`: Column start address, range: 0-127 (RESET=0)
+    /// 
+    /// `end`: Column end address, range: 0-127 (RESET=127)
+    /// 
+    /// **NOTE:** This is only for horizontal/vertical addressing mode.
+    SetColumnAddress{start_col: u8, end_col: u8}, // 0x21
     
-    // SegmentRemap(bool), // 0xA0 | 0xA1
-    // SetupVerticalScrollArea(u8, u8), // 0xA3
+    /// ### Set Page Address.
+    /// 
+    /// Setup page start and end address
+    /// 
+    /// `start_page`: Page start address (RESET=Page::Page0)
+    /// 
+    /// `end_page`: Page end address (RESET=Page::Page7)
+    /// 
+    /// **NOTE:** This is only for page addressing mode.
+    SetPageAddress{start_page: Page, end_page: Page}, // 0x22
     
-    /// ratio is between 15-63, real value is ratio+1
+    /// ### Set Page Start Address for Page Addressing Mode.
+    /// 
+    /// Set GDDRAM Page Start Address (PAGE0~PAGE7) for Page Addressing Mode.
+    /// 
+    /// **NOTE:** This command is only for page addressing mode.
+    PageStart(Page), // 0xB0-0xB7
+    
+    
+    // Hardware Configuration (Panel resolution & layout related) Commands
+    // ==================================================================
+    
+    /// ### Set Display Start Line
+    /// 
+    /// Set display RAM display start line register from 0-63.
+    /// Display start line register is reset to 0 during RESET.
+    SetStartLine(u8), // 0x40-0x7F
+    
+    /// ### Set Segment Remap.
+    /// 
+    /// `false`: column address 0 is mapped to SEG0 (RESET)
+    /// 
+    /// `true`: column address 127 is mapped to SEG0
+    SegmentRemap(bool), // 0xA0 | 0xA1
+    
+    /// ### Set Multiplex Ratio.
+    /// 
+    /// Set MUX ratio to `ratio+1` MUX. `ratio` must be in range `15..64`. (RESET=63)
     SetMultiplexRatio{ratio: u8}, // 0xA8
     
+    /// ### Set COM Output Scan Direction
+    /// 
+    /// TODO
+    SetComScanDir(bool), // 0xC0 | 0xC8
+    
+    // SetupVerticalScroll(...), // 0x28 | 0x29
+    EnableScroll(bool),
+    // SetupVerticalScrollArea(u8, u8), // 0xA3
     // InternalIref(bool, bool), // 0xAD
-    
-    // ReverseComDir(bool), // 0xC0 | 0xC8
-    
-    // DisplayOffset(u8), // 0xD3, [0]
-    
-    
+    // DisplayOffset(u8), // 0xD3
     // ComPinConfig(u8), // 0xDA
+    
     
     // Timing & Driving Scheme Setting Command Table
     // =============================================
@@ -173,12 +238,25 @@ pub enum Command {
     DisplayClockDiv{oscillator_freq: u8, divide_ratio: u8}, // 0xD5
     
     /// top nibble is phase2, bottom nibble is phase1
-    PreChargePeriod(u8), // 0xD9, [0]
+    PreChargePeriod(u8), // 0xD9
     
-    // VcomhDeselect(VcomhLevel), // 0xDB, [0]
+    // VcomhDeselect(VcomhLevel), // 0xDB
     
     /// ### Command for no operation (NOP).
     NoOp, // 0xE3
+    
+    
+    // Charge pump command table
+    // =========================
+    
+    /// ### Charge Pump Setting
+    /// 
+    /// `false`: disable charge pump (RESET)
+    /// 
+    /// `true`: enable charge pump
+    /// 
+    /// **NOTE:** The charge pump must be enabled directly before the display is turned on.
+    ChargePump(bool), // 0x8D
 }
 
 /// Which direction to scroll (left or right).

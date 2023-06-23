@@ -36,8 +36,8 @@ fn setup(dp: arduino_hal::Peripherals) -> Pin<mode::Output, arduino_hal::hal::po
     display.initialize().unwrap();
     display.send_command(ssd1306::command::Command::SetAddressMode(ssd1306::command::AddressMode::Horizontal));
     display.send_data(&[0x00; 1024]).unwrap();
-    display.send_command(ssd1306::command::Command::PageStart(0.into())).unwrap();
-    display.send_command(ssd1306::command::Command::ColumnStart(0)).unwrap();
+    display.send_command(ssd1306::command::Command::SetStartLine(32)).unwrap();
+    display.send_command(ssd1306::command::Command::ColumnStart(32)).unwrap();
     display.send_data(&[0x00, 0x66, 0x99, 0x99, 0x7E, 0x24, 0x24, 0x24, 0x24, 0x3C, 0x24, 0x18, 0x00, 0x10, 0x24]);
     
     // SAFETY: this is the only thread running, so it's safe to enable interrupts.
